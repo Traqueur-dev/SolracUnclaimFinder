@@ -4,10 +4,7 @@ import fr.traqueur.solrac.SolracUnclaimFinder;
 import fr.traqueur.solrac.unclaimfinder.UnclaimFinderManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
-import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
-import org.bukkit.Material;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEvent;
 
@@ -37,24 +34,42 @@ public class UnclaimFinderScanTask implements Runnable {
         World world = origin.getWorld();
         int radius = this.unclaimFinderManager.getUNCLAIMFINDER_RADIUS();
 
-        int fromX = (origin.getX() - radius) * 16;
-        int toX = fromX + 16 * (radius * 2 + 1) - 1;
-        int fromZ = (origin.getZ() - radius) * 16;
-        int toZ = fromZ + 16 * (radius * 2 + 1) - 1;
+        int fromX = (origin.getX() - radius);
+        int toX = fromX + (radius * 2 + 1) - 1;
+        int fromZ = (origin.getZ() - radius);
+        int toZ = fromZ + (radius * 2 + 1) - 1;
 
         int xmin = Math.min(fromX, toX), xmax = Math.max(fromX, toX), zmin = Math.min(fromZ, toZ), zmax = Math.max(fromZ, toZ);
 
         List<Thread> threads = new ArrayList<>();
+        List<ChunkSnapshot> chunkSnapshots = new ArrayList<>();
         AtomicInteger atomicPercent = new AtomicInteger();
-        for (int y = YMIN; y <= YMAX; y++) {
+
+        for (int x = xmin; x <= xmax; x++) {
+            for (int z = zmin; z <= zmax; z++) {
+                Chunk chunk = world.getChunkAt(x, z);
+                ChunkSnapshot snapshot;
+                if (!chunk.isLoaded()) {
+                    chunk.load();
+                    snapshot = chunk.getChunkSnapshot(false, false, false);
+                    chunk.unload();
+                } else {
+                    snapshot = chunk.getChunkSnapshot();
+                }
+                chunkSnapshots.add(snapshot);
+            }
+        }
+
+        for (ChunkSnapshot chunk: chunkSnapshots) {
             try {
-                int finalY = y;
                 Runnable runnable = () -> {
-                    for (int x = xmin; x <= xmax; x++) {
-                        for (int z = zmin; z <= zmax; z++) {
-                            Material blockMaterial = world.getBlockAt(x, finalY,z).getType();
-                            if(this.unclaimFinderManager.getBlocksDetectByUnclaimFinder().containsKey(blockMaterial)) {
-                                atomicPercent.addAndGet(this.unclaimFinderManager.getBlocksDetectByUnclaimFinder().get(blockMaterial));
+                    for (int y = YMIN; y <= YMAX; y++) {
+                        for (int x = 0; x < 16; x++) {
+                            for (int z = 0; z < 16; z++) {
+                                Material blockMaterial = chunk.getBlockType(x, y,z);
+                                if(this.unclaimFinderManager.getBlocksDetectByUnclaimFinder().containsKey(blockMaterial)) {
+                                    atomicPercent.addAndGet(this.unclaimFinderManager.getBlocksDetectByUnclaimFinder().get(blockMaterial));
+                                }
                             }
                         }
                     }
