@@ -1,0 +1,4 @@
+name: SolracUnclaimFinder
+version: '${version}'
+main: fr.traqueur.solrac.SolracUnclaimFinder
+api-version: '1.20'

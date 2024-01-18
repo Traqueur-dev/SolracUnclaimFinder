@@ -1,0 +1,11 @@
+unclaimfinder:
+  material: COMPASS
+  custommodeldata: 10000
+  radius: 0
+blocks:
+  '0':
+    material: FURNACE
+    percent: 1
+  '1':
+    material: CHEST
+    percent: 1
