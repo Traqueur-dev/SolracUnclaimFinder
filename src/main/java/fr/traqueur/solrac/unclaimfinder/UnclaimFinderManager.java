@@ -104,59 +104,6 @@ public class UnclaimFinderManager {
 
         event.setCancelled(true);
         Bukkit.getScheduler().runTaskAsynchronously(plugin, new UnclaimFinderScanTask(this.plugin, event));
-        //this.scan(event);
-    }
-
-    private void scan(PlayerInteractEvent event) {
-        Player player = event.getPlayer();
-        Chunk origin = player.getChunk();
-        World world = origin.getWorld();
-        int radius = UNCLAIMFINDER_RADIUS;
-        ArrayList<ChunkSnapshot> chunkSnapshots = new ArrayList<>();
-
-        int fromX = (origin.getX() - radius) * 16;
-        int toX = fromX + 16 * (radius * 2 + 1) - 1;
-        int fromZ = (origin.getZ() - radius) * 16;
-        int toZ = fromZ + 16 * (radius * 2 + 1) - 1;
-
-        int xmin = Math.min(fromX, toX), xmax = Math.max(fromX, toX), zmin = Math.min(fromZ, toZ), zmax = Math.max(fromZ, toZ);
-
-        for (int x = xmin; x <= xmax; x++) {
-            for (int z = zmin; z <= zmax; z++) {
-                Chunk chunk = world.getBlockAt(x, 0, z).getChunk();
-                if (!chunk.isLoaded()) {
-                    chunk.load();
-                    chunkSnapshots.add(chunk.getChunkSnapshot(false, false, false));
-                    chunk.unload();
-                } else {
-                    chunkSnapshots.add(chunk.getChunkSnapshot());
-                }
-            }
-        }
-
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            AtomicInteger percentage = new AtomicInteger();
-            for (ChunkSnapshot chunk : chunkSnapshots) {
-                for (int x = 0; x < 16; x++) {
-                    for (int z = 0; z < 16; z++) {
-                        for (int y = YMIN; y <= YMAX; y++) {
-                            Material blockMaterial = chunk.getBlockType(x,y,z);
-                            if(this.blocksDetectByUnclaimFinder.containsKey(blockMaterial)) {
-                                percentage.addAndGet(this.blocksDetectByUnclaimFinder.get(blockMaterial));
-                            }
-                        }
-                    }
-                }
-            }
-
-            Bukkit.getScheduler().runTask(plugin, () -> {
-                percentage.set(Math.min(percentage.get(), 100));
-                Title title = Title.title(Component.text(""), Component.text(percentage.get() + "%"));
-                player.showTitle(title);
-            });
-
-        });
-
     }
 
     public HashMap<Material, Integer> getBlocksDetectByUnclaimFinder() {
