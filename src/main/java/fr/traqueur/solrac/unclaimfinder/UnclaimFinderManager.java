@@ -13,6 +13,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
@@ -47,6 +48,10 @@ public class UnclaimFinderManager {
 
         Material material = Material.getMaterial(materialName);
         if(material == null) {
+            throw new UnclaimFinderNotExistException();
+        }
+
+        if(!(new ItemStack(material).getItemMeta() instanceof Damageable)) {
             throw new UnclaimFinderNotExistException();
         }
 
@@ -99,11 +104,24 @@ public class UnclaimFinderManager {
             return;
         }
 
+        event.setCancelled(true);
+
         Title title = Title.title(Component.text(""), Component.text("Calcul en cours..."));
         player.showTitle(title);
 
-        event.setCancelled(true);
         Bukkit.getScheduler().runTaskAsynchronously(plugin, new UnclaimFinderScanTask(this.plugin, event));
+        this.decrementDurability(item);
+    }
+
+    private void decrementDurability(ItemStack itemInHand) {
+        Damageable wandMeta = (Damageable) itemInHand.getItemMeta();
+
+        if(wandMeta.getDamage() + 1 <= UNCLAIMFINDER_MATERIAL.getMaxDurability()){
+            wandMeta.setDamage(wandMeta.getDamage() + 1);
+            itemInHand.setItemMeta(wandMeta);
+        } else {
+            itemInHand.setAmount(0);
+        }
     }
 
     public HashMap<Material, Integer> getBlocksDetectByUnclaimFinder() {
