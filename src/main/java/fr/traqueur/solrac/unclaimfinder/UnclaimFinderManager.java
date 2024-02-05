@@ -6,7 +6,8 @@ import fr.traqueur.solrac.unclaimfinder.exceptions.UnclaimFinderNotExistExceptio
 import fr.traqueur.solrac.unclaimfinder.tasks.UnclaimFinderScanTask;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.Action;
@@ -16,8 +17,8 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.HashMap;
+import java.util.Set;
 
 public class UnclaimFinderManager {
 
